@@ -24,7 +24,7 @@ The design prioritizes **explainable AI**: every condition is grounded in live A
 ## Project Layout
 
 ```
-togodx-mcp-cursor/
+togodx-mcp-ruby/
 ├── exe/togodx-mcp              # Entry point (stdio server)
 ├── lib/togodx_mcp/
 │   ├── config.rb               # Environment variable defaults

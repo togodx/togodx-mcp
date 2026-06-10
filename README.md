@@ -21,28 +21,30 @@ Agents can build filter conditions from natural language, export uploadable pres
 ## Installation
 
 ```bash
-git clone <repository-url>
-cd togodx-mcp-cursor
+git clone https://github.com/ktym/togodx-mcp-ruby.git
+cd togodx-mcp-ruby
 bundle config set --local path vendor/bundle
 bundle install
 ```
 
 ## Cursor Setup
 
-Add to your Cursor MCP settings (`.cursor/mcp.json` or global settings):
+Add to your Cursor MCP settings (`.cursor/mcp.json` or global settings).
+Replace `/path/to/togodx-mcp-ruby` with your clone directory.
 
 ```json
 {
   "mcpServers": {
     "togodx": {
-      "command": "ruby",
-      "args": ["/absolute/path/to/togodx-mcp-cursor/exe/togodx-mcp"]
+      "command": "bundle",
+      "args": ["exec", "ruby", "exe/togodx-mcp"],
+      "cwd": "/path/to/togodx-mcp-ruby"
     }
   }
 }
 ```
 
-Use the full path to a Ruby 3.1+ executable if `ruby` on your PATH points to an older version.
+Ruby 3.1+ is required. If `bundle` is not on your PATH, use the full path to a Ruby 3.1+ `bundle` executable.
 
 ## MCP Tools
 
@@ -99,7 +101,7 @@ See `doc/togodx-preset_example_case1.json` for a reference preset.
 
 ## Development
 
-See [doc/DEVELOPMENT.md](doc/DEVELOPMENT.md) for architecture, API mapping, and contribution notes.
+See [doc/Development.md](doc/Development.md) for architecture, API mapping, and contribution notes.
 
 ```bash
 rake smoke   # live API smoke test

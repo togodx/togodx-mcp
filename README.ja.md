@@ -21,8 +21,8 @@
 ## インストール
 
 ```bash
-git clone <リポジトリURL>
-cd togodx-mcp-cursor
+git clone https://github.com/ktym/togodx-mcp-ruby.git
+cd togodx-mcp-ruby
 bundle config set --local path vendor/bundle
 bundle install
 ```
@@ -30,19 +30,21 @@ bundle install
 ## Cursor への登録
 
 Cursor の MCP 設定（`.cursor/mcp.json` またはグローバル設定）に追加します。
+`/path/to/togodx-mcp-ruby` はクローン先のディレクトリに置き換えてください。
 
 ```json
 {
   "mcpServers": {
     "togodx": {
-      "command": "ruby",
-      "args": ["/absolute/path/to/togodx-mcp-cursor/exe/togodx-mcp"]
+      "command": "bundle",
+      "args": ["exec", "ruby", "exe/togodx-mcp"],
+      "cwd": "/path/to/togodx-mcp-ruby"
     }
   }
 }
 ```
 
-PATH 上の `ruby` が 2.x の場合は、Ruby 3.1 以上の実行ファイルへの絶対パスを指定してください。
+Ruby 3.1 以上が必要です。`bundle` が PATH にない場合は、Ruby 3.1 以上に付属する `bundle` の絶対パスを指定してください。
 
 ## MCP ツール一覧
 
@@ -99,7 +101,7 @@ PATH 上の `ruby` が 2.x の場合は、Ruby 3.1 以上の実行ファイル�
 
 ## 開発
 
-アーキテクチャや API マッピングは [doc/DEVELOPMENT.ja.md](doc/DEVELOPMENT.ja.md) を参照してください。
+アーキテクチャや API マッピングは [doc/Development.ja.md](doc/Development.ja.md) を参照してください。
 
 ```bash
 rake smoke   # ライブ API の smoke テスト

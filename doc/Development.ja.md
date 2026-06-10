@@ -24,7 +24,7 @@
 ## プロジェクト構成
 
 ```
-togodx-mcp-cursor/
+togodx-mcp-ruby/
 ├── exe/togodx-mcp              # エントリポイント（stdio サーバ）
 ├── lib/togodx_mcp/
 │   ├── config.rb               # 環境変数のデフォルト値
