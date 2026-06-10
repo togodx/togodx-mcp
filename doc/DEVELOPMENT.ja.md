@@ -115,7 +115,7 @@ AI エージェント（Cursor 等）
 - `queries` — ユーザ ID リストがある場合のみ含める。
 - `attributeSet` — カタログの全属性 ID を固定で含める（現時点）。
 
-参考例: `togodx-preset_example_case1.json`
+参考例: `doc/togodx-preset_example_case1.json`
 
 ## MCP ツール
 

@@ -79,7 +79,7 @@ The agent should:
 5. Call `build_preset` → `preview_aggregate` → `get_dataframe`.
 6. Call `export_preset` and instruct the user to upload the JSON in [TogoDX/Human](https://togodx.dbcls.jp/human/).
 
-See `togodx-preset_example_case1.json` for a reference preset.
+See `doc/togodx-preset_example_case1.json` for a reference preset.
 
 ### filters vs annotations
 

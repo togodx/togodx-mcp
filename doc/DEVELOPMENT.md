@@ -121,7 +121,7 @@ Rules enforced by `PresetBuilder`:
 - `queries` — included only when a non-empty user ID list is provided.
 - `attributeSet` — always the full list of attribute IDs from the catalog (currently fixed).
 
-Reference example: `togodx-preset_example_case1.json`
+Reference example: `doc/togodx-preset_example_case1.json`
 
 ## MCP Tools
 

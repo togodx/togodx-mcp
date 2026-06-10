@@ -79,7 +79,7 @@ PATH 上の `ruby` が 2.x の場合は、Ruby 3.1 以上の実行ファイル�
 5. `build_preset` → `preview_aggregate` → `get_dataframe` の順で実行する
 6. `export_preset` で JSON を出力し、[TogoDX/Human](https://togodx.dbcls.jp/human/) の Conditions JSON アップロード機能で確認してもらう
 
-参考プリセット: `togodx-preset_example_case1.json`
+参考プリセット: `doc/togodx-preset_example_case1.json`
 
 ### filters と annotations
 
