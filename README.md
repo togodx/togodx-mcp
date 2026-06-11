@@ -95,7 +95,7 @@ See `doc/togodx-preset_example_case1.json` for a reference preset.
 | Variable | Default |
 |----------|---------|
 | `TOGODX_BASE_URL` | `https://togodx.dbcls.jp/human` |
-| `TOGODX_CONFIG_URL` | GitHub URL for `attributes.dx-server.json` |
+| `TOGODX_CONFIG_URL` | URL for `attributes.json` |
 | `TOGOID_BASE_URL` | `https://api.togoid.dbcls.jp` |
 | `TOGODX_UI_URL` | `https://togodx.dbcls.jp/human` |
 

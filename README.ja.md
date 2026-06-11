@@ -95,7 +95,7 @@ Ruby 3.1 以上が必要です。`bundle` が PATH にない場合は、Ruby 3.1
 | 変数 | デフォルト |
 |------|-----------|
 | `TOGODX_BASE_URL` | `https://togodx.dbcls.jp/human` |
-| `TOGODX_CONFIG_URL` | `attributes.dx-server.json` の GitHub URL |
+| `TOGODX_CONFIG_URL` | `attributes.json` の URL |
 | `TOGOID_BASE_URL` | `https://api.togoid.dbcls.jp` |
 | `TOGODX_UI_URL` | `https://togodx.dbcls.jp/human` |
 
