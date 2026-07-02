@@ -43,7 +43,7 @@ module TogodxMcp
         ## Rules
         - Always ground node IDs in API responses.
         - Ask the user when multiple attributes or nodes are plausible.
-        - Omit queries from preset JSON when no user ID list is provided.
+        - Always include annotations and queries in preset JSON; use empty arrays when unused.
         - attributeSet is fixed to all attributes from the catalog.
       GUIDE
 

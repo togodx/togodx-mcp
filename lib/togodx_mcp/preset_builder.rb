@@ -16,10 +16,13 @@ module TogodxMcp
       condition = {
         "dataset" => dataset,
         "filters" => normalize_filters(filters),
+        "annotations" => if annotations && !annotations.empty?
+                           normalize_annotations(annotations)
+                         else
+                           []
+                         end,
+        "queries" => Array(queries).map(&:to_s).reject(&:empty?),
       }
-      condition["annotations"] = normalize_annotations(annotations) if annotations && !annotations.empty?
-      normalized_queries = Array(queries).map(&:to_s).reject(&:empty?)
-      condition["queries"] = normalized_queries if normalized_queries.any?
 
       [
         {

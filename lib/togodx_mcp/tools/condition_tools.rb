@@ -74,7 +74,7 @@ module TogodxMcp
           queries: {
             type: "array",
             items: { type: "string" },
-            description: "Optional user ID list. Omit or leave empty to exclude queries from JSON.",
+            description: "Optional user ID list. Use an empty array when not mapping IDs.",
           },
         },
         required: %w[dataset filters]
