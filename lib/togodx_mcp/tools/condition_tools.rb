@@ -14,7 +14,12 @@ module TogodxMcp
       description "Preview how many entries match a condition using the /aggregate API."
       input_schema(
         properties: {
-          dataset: { type: "string" },
+          dataset: {
+            type: "string",
+            description: "Primary-key dataset the result rows are keyed on, e.g. uniprot " \
+                         "(proteins) or ensembl_gene (genes). Each attribute reports its dataset " \
+                         "via search_attributes; filters may mix attributes from other datasets.",
+          },
           filters: {
             type: "string",
             description: "JSON-stringified array of filter objects, " \
@@ -58,7 +63,12 @@ module TogodxMcp
       description "Build a TogoDX uploadable preset JSON array from structured condition fields."
       input_schema(
         properties: {
-          dataset: { type: "string" },
+          dataset: {
+            type: "string",
+            description: "Primary-key dataset the result rows are keyed on, e.g. uniprot " \
+                         "(proteins) or ensembl_gene (genes). Each attribute reports its dataset " \
+                         "via search_attributes; filters may mix attributes from other datasets.",
+          },
           filters: {
             type: "array",
             items: {
@@ -110,7 +120,12 @@ module TogodxMcp
       description "Fetch the result table from /dataframe for a built condition."
       input_schema(
         properties: {
-          dataset: { type: "string" },
+          dataset: {
+            type: "string",
+            description: "Primary-key dataset the result rows are keyed on, e.g. uniprot " \
+                         "(proteins) or ensembl_gene (genes). Each attribute reports its dataset " \
+                         "via search_attributes; filters may mix attributes from other datasets.",
+          },
           filters: {
             type: "string",
             description: "JSON-stringified array of filter objects, " \
