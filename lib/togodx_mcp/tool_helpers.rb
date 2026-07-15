@@ -38,5 +38,24 @@ module TogodxMcp
     rescue JSON::ParserError
       raise ArgumentError, "#{name} must be a JSON object"
     end
+
+    # Normalize the many shapes a preset can arrive in into the canonical
+    # [{ "condition" => ..., "attributeSet" => ... }, ...] array. Accepts:
+    #   - the bare array itself
+    #   - the { "preset" => [...] } object returned by build_preset
+    #   - a single { "condition" => ..., "attributeSet" => ... } entry
+    #   - a JSON string of any of the above
+    def normalize_preset(value)
+      data = value.is_a?(String) ? JSON.parse(value) : value
+      data = data["preset"] || data[:preset] if data.is_a?(Hash) && (data["preset"] || data[:preset])
+      data = [data] if data.is_a?(Hash) && (data["condition"] || data[:condition])
+      unless data.is_a?(Array)
+        raise ArgumentError, "preset must be a preset array or a { \"preset\": [...] } object"
+      end
+
+      data
+    rescue JSON::ParserError
+      raise ArgumentError, "preset must be valid JSON"
+    end
   end
 end

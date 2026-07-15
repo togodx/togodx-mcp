@@ -156,7 +156,7 @@ module TogodxMcp
       input_schema(
         properties: {
           preset: {
-            description: "Preset array from build_preset, or a JSON string of that array.",
+            description: "Preset from build_preset: its `preset` array, the whole { \"preset\": [...] } object, or a JSON string of either.",
             type: "array",
           },
           filename: {
@@ -169,8 +169,7 @@ module TogodxMcp
 
       def self.call(preset:, filename: nil, server_context: nil)
         ToolHelpers.context!(server_context)
-        preset_data = preset.is_a?(String) ? JSON.parse(preset) : preset
-        raise ArgumentError, "preset must be a JSON array" unless preset_data.is_a?(Array)
+        preset_data = ToolHelpers.normalize_preset(preset)
 
         path = filename.to_s.empty? ? File.join(Dir.tmpdir, "togodx_preset.json") : filename
         File.write(path, JSON.pretty_generate(preset_data))
@@ -202,7 +201,7 @@ module TogodxMcp
       input_schema(
         properties: {
           preset: {
-            description: "Preset array from build_preset, or a JSON string of that array.",
+            description: "Preset from build_preset: its `preset` array, the whole { \"preset\": [...] } object, or a JSON string of either.",
             type: "array",
           },
         },
@@ -211,8 +210,9 @@ module TogodxMcp
 
       def self.call(preset:, server_context: nil)
         ToolHelpers.context!(server_context)
-        # Use the preset JSON as-is; a string is already JSON, an array is serialized once.
-        conditions_json = preset.is_a?(String) ? preset : JSON.generate(preset)
+        # Normalize to the canonical preset array (unwrapping build_preset's
+        # { "preset" => [...] } shape) so conditions= always holds the bare array.
+        conditions_json = JSON.generate(ToolHelpers.normalize_preset(preset))
         base = Config.togodx_ui_url.chomp("/")
         # URL-encode the JSON so the UI can restore it via decodeURIComponent on a GET request.
         url = "#{base}/?conditions=#{ERB::Util.url_encode(conditions_json)}"
@@ -238,7 +238,7 @@ module TogodxMcp
       input_schema(
         properties: {
           preset: {
-            description: "Preset array from build_preset, or a JSON string of that array.",
+            description: "Preset from build_preset: its `preset` array, the whole { \"preset\": [...] } object, or a JSON string of either.",
             type: "array",
           },
         },
@@ -247,8 +247,7 @@ module TogodxMcp
 
       def self.call(preset:, server_context: nil)
         ctx = ToolHelpers.context!(server_context)
-        preset_data = preset.is_a?(String) ? JSON.parse(preset) : preset
-        raise ArgumentError, "preset must be a JSON array" unless preset_data.is_a?(Array)
+        preset_data = ToolHelpers.normalize_preset(preset)
 
         condition = PresetBuilder.new(catalog: ctx[:catalog]).condition_from_preset(preset_data)
         dataset = condition["dataset"]
