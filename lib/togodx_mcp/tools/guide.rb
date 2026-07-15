@@ -105,7 +105,8 @@ module TogodxMcp
         - Whenever a preset is ready, present a build_share_link URL to the user so they can
           open and verify the same view in the TogoDX/Human web UI, in addition to any
           results you fetched. Fetching results and pointing to the web UI are complementary.
-        - Omit queries from the preset when no user ID list is provided.
+        - The condition always keeps filters, annotations, and queries keys; empty ones
+          stay as [] rather than being dropped.
         - attributeSet is fixed to all attributes from the catalog.
       GUIDE
 

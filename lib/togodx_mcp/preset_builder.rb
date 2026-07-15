@@ -13,13 +13,14 @@ module TogodxMcp
       validate_filters!(filters)
       validate_annotations!(annotations) if annotations
 
+      # Always keep filters/annotations/queries keys, even when empty, so the
+      # condition shape stays stable ([] rather than a missing key).
       condition = {
         "dataset" => dataset,
         "filters" => normalize_filters(filters),
+        "annotations" => normalize_annotations(annotations),
+        "queries" => Array(queries).map(&:to_s).reject(&:empty?),
       }
-      condition["annotations"] = normalize_annotations(annotations) if annotations && !annotations.empty?
-      normalized_queries = Array(queries).map(&:to_s).reject(&:empty?)
-      condition["queries"] = normalized_queries if normalized_queries.any?
 
       [
         {

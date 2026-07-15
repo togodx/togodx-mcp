@@ -94,7 +94,7 @@ module TogodxMcp
           queries: {
             type: "array",
             items: { type: "string" },
-            description: "Optional user ID list. Omit or leave empty to exclude queries from JSON.",
+            description: "Optional user ID list. Always kept in the JSON as [] when empty.",
           },
         },
         required: %w[dataset filters]
@@ -225,19 +225,9 @@ module TogodxMcp
 
       def self.call(preset:, server_context: nil)
         ToolHelpers.context!(server_context)
-        # The UI's ?conditions= expects an array of condition objects only —
-        # [{ "dataset":.., "filters":.., "queries":.., "annotations":.. }] — not the
-        # { "condition":.., "attributeSet":.. } preset wrapper. Unwrap each entry's
-        # condition (falling back to the entry itself if it is already a condition).
-        entries = ToolHelpers.normalize_preset(preset)
-        conditions = entries.map do |entry|
-          if entry.is_a?(Hash) && (entry["condition"] || entry[:condition])
-            entry["condition"] || entry[:condition]
-          else
-            entry
-          end
-        end
-        conditions_json = JSON.generate(conditions)
+        # Normalize to the canonical preset array (unwrapping build_preset's
+        # { "preset" => [...] } shape) so conditions= always holds the bare array.
+        conditions_json = JSON.generate(ToolHelpers.normalize_preset(preset))
         base = Config.togodx_ui_url.chomp("/")
         # URL-encode the JSON so the UI can restore it via decodeURIComponent on a GET request.
         url = "#{base}/?conditions=#{ERB::Util.url_encode(conditions_json)}"
