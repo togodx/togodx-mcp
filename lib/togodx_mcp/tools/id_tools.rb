@@ -41,9 +41,10 @@ module TogodxMcp
           attribute: { type: "string" },
           dataset: { type: "string", description: "Target dataset such as ensembl_gene or uniprot" },
           queries: {
-            type: "array",
-            items: { type: "string" },
-            description: "User-provided IDs in the target dataset",
+            type: "string",
+            description: "JSON-stringified array of user-provided IDs in the target dataset, " \
+                         "e.g. '[\"ID1\",\"ID2\"]'. " \
+                         "Sent to the API as a JSON string so GET and POST share one key-value format.",
           },
           node: { type: "string", description: "Optional parent node for hierarchical attributes." },
         },

@@ -27,24 +27,46 @@ bundle config set --local path vendor/bundle
 bundle install
 ```
 
-## Cursor への登録
+## MCP クライアントへの登録（Cursor / Claude Desktop など）
 
-Cursor の MCP 設定（`.cursor/mcp.json` またはグローバル設定）に追加します。
-`/path/to/togodx-mcp-ruby` はクローン先のディレクトリに置き換えてください。
+各クライアントの MCP 設定（Cursor なら `.cursor/mcp.json`、Claude Desktop なら
+`claude_desktop_config.json` など）に追加します。**すべての値を絶対パスで書いてください。**
+GUI 系の MCP クライアントはシェルの `PATH`・rbenv/rvm の shim・カレントディレクトリを
+引き継がないため、相対パスや `bundle` だけの指定では失敗します。
 
 ```json
 {
   "mcpServers": {
     "togodx": {
-      "command": "bundle",
-      "args": ["exec", "ruby", "exe/togodx-mcp"],
-      "cwd": "/path/to/togodx-mcp-ruby"
+      "command": "/absolute/path/to/bundle",
+      "args": ["exec", "ruby", "/absolute/path/to/togodx-mcp-ruby/exe/togodx-mcp"],
+      "env": {
+        "BUNDLE_GEMFILE": "/absolute/path/to/togodx-mcp-ruby/Gemfile"
+      }
     }
   }
 }
 ```
 
-Ruby 3.1 以上が必要です。`bundle` が PATH にない場合は、Ruby 3.1 以上に付属する `bundle` の絶対パスを指定してください。
+各パスの調べ方:
+
+- **`command`** — Ruby 3.1 以上の `bundle` の絶対パス。
+  rbenv なら `rbenv which bundle`（例: `~/.rbenv/versions/3.4.5/bin/bundle`）、
+  それ以外は `which bundle` で取得します。
+- **`args`** — クローン先の `exe/togodx-mcp` の絶対パス。
+- **`env.BUNDLE_GEMFILE`** — クローン先の `Gemfile` の絶対パス。
+  `cwd` を尊重しないクライアント（特に Claude Desktop）でも Bundler が gem を
+  見つけられるようにするための指定で、`cwd` の代わりになります。
+
+> クライアントが `cwd` を尊重し、かつ `bundle` が `PATH` にある場合は、短い形
+> （`"command": "bundle"` ＋ `"cwd": "/path/to/togodx-mcp-ruby"`）でも動きますが、
+> どの環境でも確実に動くのは上の絶対パス形式です。
+
+> **ChatGPT は非対応です。** 本サーバはローカルの stdio トランスポート
+> （`command`/`args` でプロセス起動する方式）で動作しますが、ChatGPT のコネクタは
+> URL で登録するリモート HTTP（SSE / Streamable HTTP）MCP サーバを前提とします。
+> Cursor や Claude Desktop など、ローカル stdio の MCP サーバを起動できるクライアントを
+> ご利用ください。
 
 ## MCP ツール一覧
 
@@ -65,6 +87,8 @@ Ruby 3.1 以上が必要です。`bundle` が PATH にない場合は、Ruby 3.1
 | `build_preset` | アップロード用プリセット JSON の生成 |
 | `get_dataframe` | 結果テーブルの取得 |
 | `export_preset` | JSON ファイル出力とアップロード手順 |
+| `build_share_link` | プリセットを反映した TogoDX/Human の共有 URL を生成 |
+| `run_preset` | プリセットを end-to-end 実行（aggregate → dataframe）し最終結果テーブルを取得 |
 
 ## 典型的なワークフロー
 

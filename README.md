@@ -27,24 +27,45 @@ bundle config set --local path vendor/bundle
 bundle install
 ```
 
-## Cursor Setup
+## MCP Client Setup (Cursor / Claude Desktop / etc.)
 
-Add to your Cursor MCP settings (`.cursor/mcp.json` or global settings).
-Replace `/path/to/togodx-mcp-ruby` with your clone directory.
+Add the following to your client's MCP settings (e.g. Cursor's `.cursor/mcp.json`,
+or Claude Desktop's `claude_desktop_config.json`). **Use absolute paths for every
+value** — GUI MCP clients do not inherit your shell `PATH`, your rbenv/rvm shims,
+or a working directory, so relative paths and a bare `bundle` command will fail.
 
 ```json
 {
   "mcpServers": {
     "togodx": {
-      "command": "bundle",
-      "args": ["exec", "ruby", "exe/togodx-mcp"],
-      "cwd": "/path/to/togodx-mcp-ruby"
+      "command": "/absolute/path/to/bundle",
+      "args": ["exec", "ruby", "/absolute/path/to/togodx-mcp-ruby/exe/togodx-mcp"],
+      "env": {
+        "BUNDLE_GEMFILE": "/absolute/path/to/togodx-mcp-ruby/Gemfile"
+      }
     }
   }
 }
 ```
 
-Ruby 3.1+ is required. If `bundle` is not on your PATH, use the full path to a Ruby 3.1+ `bundle` executable.
+How to fill in the paths:
+
+- **`command`** — the absolute path to `bundle` for a Ruby 3.1+ install.
+  With rbenv, run `rbenv which bundle` (e.g. `~/.rbenv/versions/3.4.5/bin/bundle`);
+  otherwise `which bundle`.
+- **`args`** — the absolute path to `exe/togodx-mcp` in your clone.
+- **`env.BUNDLE_GEMFILE`** — the absolute path to the `Gemfile` in your clone.
+  This replaces `cwd`, which some clients (notably Claude Desktop) ignore, and is
+  what lets Bundler find the gems regardless of the working directory.
+
+> If your client honors `cwd` and `bundle` is on its `PATH`, a shorter form
+> (`"command": "bundle"`, `"cwd": "/path/to/togodx-mcp-ruby"`) can work, but the
+> absolute-path form above is the portable one that works everywhere.
+
+> **ChatGPT is not supported.** This server speaks the local stdio transport
+> (launched as a process via `command`/`args`), whereas ChatGPT connectors expect
+> a remote HTTP (SSE / Streamable HTTP) MCP server registered by URL. Use a client
+> that runs local stdio MCP servers, such as Cursor or Claude Desktop.
 
 ## MCP Tools
 
@@ -65,6 +86,8 @@ Call **`togodx_usage_guide`** first in every conversation.
 | `build_preset` | Build uploadable preset JSON |
 | `get_dataframe` | Fetch result table |
 | `export_preset` | Write JSON file and return upload instructions |
+| `build_share_link` | Build a shareable TogoDX/Human URL that opens the UI with the preset applied |
+| `run_preset` | Run a preset end-to-end (aggregate → dataframe) and return the final result table |
 
 ## Typical Workflow
 

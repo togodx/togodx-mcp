@@ -26,6 +26,8 @@ module TogodxMcp
           BuildPreset,
           GetDataframe,
           ExportPreset,
+          BuildShareLink,
+          RunPreset,
         ]
       end
     end
