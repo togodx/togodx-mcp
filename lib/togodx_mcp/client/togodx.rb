@@ -28,11 +28,13 @@ module TogodxMcp
         @http.post("/locate/#{attribute}", body)
       end
 
-      def aggregate(dataset:, filters:)
-        @http.post("/aggregate", { "dataset" => dataset, "filters" => filters })
+      def aggregate(dataset:, filters:, queries: nil)
+        body = { "dataset" => dataset, "filters" => filters }
+        body["queries"] = queries if queries
+        @http.post("/aggregate", body)
       end
 
-      def dataframe(dataset:, filters:, annotations: nil, queries: [])
+      def dataframe(dataset:, filters:, annotations: nil, queries: "[]")
         body = {
           "dataset" => dataset,
           "filters" => filters,

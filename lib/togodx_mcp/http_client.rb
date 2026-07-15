@@ -36,6 +36,11 @@ module TogodxMcp
       uri = build_uri(path, params)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == "https"
+      if http.use_ssl?
+        store = OpenSSL::X509::Store.new
+        store.set_default_paths
+        http.cert_store = store
+      end
       http.open_timeout = @open_timeout
       http.read_timeout = @read_timeout
 

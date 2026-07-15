@@ -11,8 +11,17 @@ module TogodxMcp
   class Server
     INSTRUCTIONS = <<~TEXT.strip
       TogoDX/Human MCP server. Start with togodx_usage_guide.
-      Build uploadable preset JSON from natural-language exploration requests,
-      ground every node ID in API responses, and use export_preset for UI verification.
+
+      A one-stop way to explore and extract human life-science information in
+      TogoDX/Human (gene expression, localization, interactions, compounds,
+      disease, variants, and more) from natural language. Search attributes and
+      ground every node ID in API responses (never invent IDs), then:
+      - run_preset to fetch the final result table (same as the web UI) for the
+        LLM to interpret, and
+      - always also give the user a build_share_link URL (and export_preset when
+        they want a file) so they can open and verify the same conditions in the
+        TogoDX/Human web UI. Returning results and guiding to the web UI are
+        complementary, not either/or.
     TEXT
 
     def self.build
