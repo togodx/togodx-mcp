@@ -15,11 +15,13 @@ module TogodxMcp
       A one-stop way to explore and extract human life-science information in
       TogoDX/Human (gene expression, localization, interactions, compounds,
       disease, variants, and more) from natural language. Search attributes and
-      ground every node ID in API responses (never invent IDs), then either:
+      ground every node ID in API responses (never invent IDs), then:
       - run_preset to fetch the final result table (same as the web UI) for the
-        LLM to interpret, or
-      - build_share_link / export_preset so a human can open or upload the same
-        conditions in the TogoDX/Human web UI.
+        LLM to interpret, and
+      - always also give the user a build_share_link URL (and export_preset when
+        they want a file) so they can open and verify the same conditions in the
+        TogoDX/Human web UI. Returning results and guiding to the web UI are
+        complementary, not either/or.
     TEXT
 
     def self.build

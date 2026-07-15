@@ -23,7 +23,8 @@ module TogodxMcp
         5. Convert or map user-provided IDs with convert_ids / locate_ids.
         6. Build the preset with build_preset, then preview_aggregate to check the count.
         7. run_preset to fetch the final result table (same as the web UI) for interpretation.
-        8. build_share_link and/or export_preset so the user can open or upload it in the UI.
+        8. Always also call build_share_link and give the user the URL so they can open the
+           same view in the web UI; offer export_preset when they want an uploadable file.
       DESC
 
       input_schema(properties: {})
@@ -87,7 +88,8 @@ module TogodxMcp
         4. build_preset
         5. preview_aggregate (sanity-check the count)
         6. run_preset to get the final result table for the LLM to interpret
-        7. build_share_link and/or export_preset so the user can verify/share in the UI
+        7. Always also call build_share_link and present the URL so the user can open the
+           same conditions in the web UI; offer export_preset for an uploadable JSON file
 
         ## Value formats (important)
         - build_preset takes filters/annotations/queries as NATIVE JSON arrays/objects.
@@ -100,6 +102,9 @@ module TogodxMcp
         ## Rules
         - Always ground node IDs in API responses; never invent them.
         - Ask the user when multiple attributes or nodes are plausible.
+        - Whenever a preset is ready, present a build_share_link URL to the user so they can
+          open and verify the same view in the TogoDX/Human web UI, in addition to any
+          results you fetched. Fetching results and pointing to the web UI are complementary.
         - Omit queries from the preset when no user ID list is provided.
         - attributeSet is fixed to all attributes from the catalog.
       GUIDE
