@@ -256,6 +256,13 @@ module TogodxMcp
         annotations = condition["annotations"]
         input_queries = condition["queries"] || []
 
+        # Match the /aggregate requirement: dataset is required and at least one of
+        # filters or queries must be a non-empty array.
+        raise ArgumentError, "dataset is required" if dataset.to_s.empty?
+        if Array(filters).empty? && Array(input_queries).empty?
+          raise ArgumentError, "The preset must have a non-empty filters or queries array"
+        end
+
         togodx = ctx[:togodx]
         filters_json = JSON.generate(filters)
 
