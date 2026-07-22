@@ -68,6 +68,33 @@ GUI 系の MCP クライアントはシェルの `PATH`・rbenv/rvm の shim・�
 > Cursor や Claude Desktop など、ローカル stdio の MCP サーバを起動できるクライアントを
 > ご利用ください。
 
+## リモート（HTTP）サーバ
+
+Streamable HTTP トランスポートによるリモート MCP としても起動できます。URL で
+MCP サーバを登録する方式のクライアント（Claude Desktop のコネクタ、ChatGPT の
+カスタムコネクタなど）から利用できます。
+
+```bash
+bundle install --with http          # rack + puma をインストール
+export TOGODX_MCP_AUTH_TOKEN=your-secret-token
+bundle exec puma -p 9292 config.ru
+```
+
+- MCP エンドポイントは `/`。`GET /health` は死活監視用に `200` を返します。
+- クライアントは毎リクエストで `Authorization: Bearer <token>` を送ります。
+  `TOGODX_MCP_AUTH_TOKEN` を未設定にすると**認証なし**になるため、その場合は
+  プライベート/ローカルネットワークでのみ運用してください。
+- TLS は Puma の前段のリバースプロキシ（nginx / Caddy / クラウド LB）で終端します。
+- 属性カタログは起動時に一度だけ取得し、リクエスト間で再利用します。
+
+HTTP 関連の環境変数:
+
+| 変数 | デフォルト | 用途 |
+|------|-----------|------|
+| `TOGODX_MCP_AUTH_TOKEN` | （未設定） | 必須とする Bearer トークン。未設定なら認証なし |
+| `TOGODX_MCP_STATELESS` | `false` | ステートレスモード（セッション別 SSE を持たない）。LB/サーバレス向け |
+| `TOGODX_MCP_JSON_RESPONSE` | `false` | SSE ではなく素の JSON で応答（SSE を読めないクライアント向け） |
+
 ## MCP ツール一覧
 
 会話の最初に **`togodx_usage_guide`** を呼び出してください。

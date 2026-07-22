@@ -45,5 +45,16 @@ module TogodxMcp
       transport = MCP::Server::Transports::StdioTransport.new(build)
       transport.open
     end
+
+    # Rack app for the Streamable HTTP transport. The MCP server (and its
+    # catalog + downstream clients) is built once here and reused across
+    # requests, so mount the returned app in a long-running Rack server.
+    def self.rack_app(stateless: Config.mcp_stateless?, enable_json_response: Config.mcp_enable_json_response?)
+      MCP::Server::Transports::StreamableHTTPTransport.new(
+        build,
+        stateless: stateless,
+        enable_json_response: enable_json_response
+      )
+    end
   end
 end
