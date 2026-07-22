@@ -75,7 +75,8 @@ MCP サーバを登録する方式のクライアント（Claude Desktop のコ�
 カスタムコネクタなど）から利用できます。
 
 ```bash
-bundle install --with http          # rack + puma をインストール
+bundle config set --local with http   # http グループ（rack + puma）を含める
+bundle install
 export TOGODX_MCP_AUTH_TOKEN=your-secret-token
 bundle exec puma -p 9292 config.ru
 ```

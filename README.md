@@ -74,7 +74,8 @@ clients that register MCP servers by URL (e.g. Claude Desktop connectors,
 ChatGPT custom connectors) can use it.
 
 ```bash
-bundle install --with http          # install rack + puma
+bundle config set --local with http   # include the http group (rack + puma)
+bundle install
 export TOGODX_MCP_AUTH_TOKEN=your-secret-token
 bundle exec puma -p 9292 config.ru
 ```
