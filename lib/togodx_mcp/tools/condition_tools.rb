@@ -212,11 +212,16 @@ module TogodxMcp
       tool_name "build_share_link"
       description "Build a shareable TogoDX/Human URL that opens the web UI with the given " \
                   "preset conditions pre-applied. Show the returned link in chat so the user " \
-                  "can click through and verify the conditions in the UI."
+                  "can click through and verify the conditions in the UI. Pass the build_preset " \
+                  "output verbatim; attributeSet is always regenerated from the catalog (so you " \
+                  "never need to include or edit it), while a malformed dataset/filters/annotations " \
+                  "returns an error describing what to fix."
       input_schema(
         properties: {
           preset: {
-            description: "Preset from build_preset: its `preset` array, the whole { \"preset\": [...] } object, or a JSON string of either.",
+            description: "Preset from build_preset (its `preset` array, the whole " \
+                         "{ \"preset\": [...] } object, or a JSON string of either). attributeSet " \
+                         "is optional and ignored — it is always rebuilt from the catalog.",
             type: "array",
           },
         },
@@ -224,10 +229,28 @@ module TogodxMcp
       )
 
       def self.call(preset:, server_context: nil)
-        ToolHelpers.context!(server_context)
-        # Normalize to the canonical preset array (unwrapping build_preset's
-        # { "preset" => [...] } shape) so conditions= always holds the bare array.
-        conditions_json = JSON.generate(ToolHelpers.normalize_preset(preset))
+        ctx = ToolHelpers.context!(server_context)
+        # Rebuild each entry through PresetBuilder: attributeSet is regenerated
+        # from the catalog (so an LLM dropping it cannot break the link), while
+        # dataset/filters/annotations are validated and any defect is returned to
+        # the caller as a clear error instead of being silently accepted.
+        builder = PresetBuilder.new(catalog: ctx[:catalog])
+        entries = ToolHelpers.normalize_preset(preset).each_with_index.map do |entry, i|
+          condition = entry.is_a?(Hash) && (entry["condition"] || entry[:condition])
+          condition ||= entry
+          unless condition.is_a?(Hash)
+            raise ArgumentError, "Preset entry #{i} must contain a condition object"
+          end
+
+          builder.build(
+            dataset: condition["dataset"] || condition[:dataset],
+            filters: condition["filters"] || condition[:filters],
+            annotations: condition["annotations"] || condition[:annotations],
+            queries: condition["queries"] || condition[:queries]
+          ).first
+        end
+
+        conditions_json = JSON.generate(entries)
         base = Config.togodx_ui_url.chomp("/")
         # URL-encode the JSON so the UI can restore it via decodeURIComponent on a GET request.
         url = "#{base}/?conditions=#{ERB::Util.url_encode(conditions_json)}"
