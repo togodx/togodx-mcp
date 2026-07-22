@@ -67,6 +67,34 @@ How to fill in the paths:
 > a remote HTTP (SSE / Streamable HTTP) MCP server registered by URL. Use a client
 > that runs local stdio MCP servers, such as Cursor or Claude Desktop.
 
+## Remote (HTTP) Server
+
+The server also runs as a remote MCP over the Streamable HTTP transport, so
+clients that register MCP servers by URL (e.g. Claude Desktop connectors,
+ChatGPT custom connectors) can use it.
+
+```bash
+bundle config set --local with http   # include the http group (rack + puma)
+bundle install
+export TOGODX_MCP_AUTH_TOKEN=your-secret-token
+bundle exec puma -p 9292 config.ru
+```
+
+- The MCP endpoint is served at `/`; `GET /health` returns `200` for liveness checks.
+- Clients send `Authorization: Bearer <token>` on every request. If
+  `TOGODX_MCP_AUTH_TOKEN` is unset the endpoint is **unauthenticated** — only do
+  that on a private/local network.
+- Terminate TLS with a reverse proxy (nginx / Caddy / cloud load balancer) in front of Puma.
+- The catalog is fetched once at boot and reused across requests.
+
+HTTP-related environment variables:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `TOGODX_MCP_AUTH_TOKEN` | (unset) | Require this bearer token; unset means no auth |
+| `TOGODX_MCP_STATELESS` | `false` | Stateless mode (no per-session SSE) for load-balanced/serverless deploys |
+| `TOGODX_MCP_JSON_RESPONSE` | `false` | Reply with plain JSON instead of an SSE stream for clients that do not read SSE |
+
 ## MCP Tools
 
 Call **`togodx_usage_guide`** first in every conversation.

@@ -17,4 +17,11 @@ module TogodxMcp
   def run
     Server.run_stdio
   end
+
+  # Build the Rack app for the remote (Streamable HTTP) MCP server, wrapped in
+  # the token-auth + /health middleware. Mount this in config.ru.
+  def rack_app
+    require_relative "togodx_mcp/rack_auth"
+    RackAuth.new(Server.rack_app)
+  end
 end
