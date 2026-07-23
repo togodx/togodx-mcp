@@ -2,3 +2,7 @@
 /vendor/bundle/
 *.gem
 .DS_Store
+
+# Local-only session work logs / notes
+WORKLOG.local.md
+*.local.md
