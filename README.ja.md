@@ -4,6 +4,9 @@
 
 自然言語からフィルタ条件を構築し、TogoDX UI にアップロード可能なプリセット JSON を出力したり、ユーザの ID リストを適用したり、結果テーブルを取得したりできます。**Explainable AI** — AI が推論した条件を TogoDX UI 上で人間が検証できる — ことを目的としています。
 
+公開サーバを **<https://togodx.dbcls.jp/human/mcp/>** で運用しています。インストール
+不要で利用できます（[公開サーバ](#公開サーバ)を参照）。
+
 ## 機能
 
 - **属性の探索** — 8 カテゴリ・65 属性の検索・参照
@@ -12,6 +15,45 @@
 - **ID 変換** — [TogoID](https://togoid.dbcls.jp/) API による外部識別子の変換
 - **結果プレビュー** — `/aggregate` による件数確認、`/dataframe` によるテーブル取得
 - **検証可能なワークフロー** — `export_preset` で JSON を出力し、研究者が Web UI で条件を確認
+
+## 公開サーバ
+
+DBCLS が本サーバの公開インスタンスを提供しています。インストールなしで利用できます。
+
+```
+https://togodx.dbcls.jp/human/mcp/
+```
+
+- **トランスポート:** Streamable HTTP（MCP）。URL でリモート MCP サーバを登録できる
+  クライアント（Claude Desktop / Claude Code のカスタムコネクタ、ChatGPT の
+  カスタムコネクタ、Cursor など）から利用できます。
+- **認証:** なし。API キーやトークンは不要です。
+- 末尾のスラッシュは任意で、`.../human/mcp` でも `.../human/mcp/` でも動作します。
+
+Claude Code の場合:
+
+```bash
+claude mcp add --transport http togodx https://togodx.dbcls.jp/human/mcp/
+```
+
+JSON 設定に URL を書く形式のクライアント（Cursor の `.cursor/mcp.json` など）:
+
+```json
+{
+  "mcpServers": {
+    "togodx": {
+      "url": "https://togodx.dbcls.jp/human/mcp/"
+    }
+  }
+}
+```
+
+Claude Desktop や ChatGPT では、コネクタ / MCP の設定画面から同じ URL を登録します。
+
+> 公開エンドポイントは対話利用を想定した共用のベストエフォートサービスです。負荷の
+> 高い用途や本番運用では自前のインスタンスを立ててください
+> （ローカル stdio は[インストール](#インストール)、リモート HTTP は
+> [リモート（HTTP）サーバの自前運用](#リモートhttpサーバの自前運用)を参照）。
 
 ## 必要条件
 
@@ -62,17 +104,17 @@ GUI 系の MCP クライアントはシェルの `PATH`・rbenv/rvm の shim・�
 > （`"command": "bundle"` ＋ `"cwd": "/path/to/togodx-mcp-ruby"`）でも動きますが、
 > どの環境でも確実に動くのは上の絶対パス形式です。
 
-> **ChatGPT は非対応です。** 本サーバはローカルの stdio トランスポート
-> （`command`/`args` でプロセス起動する方式）で動作しますが、ChatGPT のコネクタは
-> URL で登録するリモート HTTP（SSE / Streamable HTTP）MCP サーバを前提とします。
-> Cursor や Claude Desktop など、ローカル stdio の MCP サーバを起動できるクライアントを
-> ご利用ください。
+> **この設定はローカル stdio クライアント専用です。** `command`/`args` でプロセスを
+> 起動する方式のため、ChatGPT のコネクタでは利用できません（URL で登録するリモート
+> HTTP MCP サーバが前提のため）。ChatGPT など URL 登録方式のクライアントからは、
+> [公開サーバ](#公開サーバ) `https://togodx.dbcls.jp/human/mcp/` をご利用ください。
 
-## リモート（HTTP）サーバ
+## リモート（HTTP）サーバの自前運用
 
 Streamable HTTP トランスポートによるリモート MCP としても起動できます。URL で
 MCP サーバを登録する方式のクライアント（Claude Desktop のコネクタ、ChatGPT の
-カスタムコネクタなど）から利用できます。
+カスタムコネクタなど）から利用できます。<https://togodx.dbcls.jp/human/mcp/> も
+この方式で運用しています。自前のインスタンスを立てる場合のみ以下を参照してください。
 
 ```bash
 bundle config set --local with http   # http グループ（rack + puma）を含める

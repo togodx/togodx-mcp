@@ -4,6 +4,8 @@ An [MCP](https://modelcontextprotocol.io/) server that connects AI agents to [To
 
 Agents can build filter conditions from natural language, export uploadable preset JSON for the TogoDX UI, map user ID lists, and fetch result tables — enabling **explainable, verifiable AI-assisted data exploration**.
 
+A public instance is hosted at **<https://togodx.dbcls.jp/human/mcp/>** — see [Public Server](#public-server) to connect without installing anything.
+
 ## Features
 
 - **Attribute discovery** — Search and browse 65 TogoDX/Human attributes across 8 categories (Gene, Protein, Structure, Interaction, Compound, Glycan, Disease, Variant).
@@ -12,6 +14,47 @@ Agents can build filter conditions from natural language, export uploadable pres
 - **ID conversion** — Convert external identifiers to TogoDX-compatible datasets via the [TogoID](https://togoid.dbcls.jp/) API.
 - **Result preview** — Check match counts with `/aggregate` and fetch tables with `/dataframe`.
 - **Explainable workflow** — Export JSON with `export_preset` so researchers can verify conditions in the TogoDX web UI.
+
+## Public Server
+
+DBCLS hosts a public instance of this server, so you do not need to install
+anything to use it:
+
+```
+https://togodx.dbcls.jp/human/mcp/
+```
+
+- **Transport:** Streamable HTTP (MCP). Register it by URL in any client that
+  supports remote MCP servers — Claude Desktop / Claude Code custom connectors,
+  ChatGPT custom connectors, Cursor, and so on.
+- **Authentication:** none. No API key or token is required.
+- Trailing slash optional; both `.../human/mcp` and `.../human/mcp/` work.
+
+Claude Code:
+
+```bash
+claude mcp add --transport http togodx https://togodx.dbcls.jp/human/mcp/
+```
+
+Clients that take a URL in their JSON config (e.g. Cursor's `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "togodx": {
+      "url": "https://togodx.dbcls.jp/human/mcp/"
+    }
+  }
+}
+```
+
+In Claude Desktop or ChatGPT, add it from the connector / MCP settings UI by
+pasting the same URL.
+
+> The public endpoint is a shared, best-effort service intended for interactive
+> use. For heavy or production workloads, run your own instance — see
+> [Installation](#installation) for the local stdio server and
+> [Self-hosting the Remote (HTTP) Server](#self-hosting-the-remote-http-server).
 
 ## Requirements
 
@@ -62,16 +105,19 @@ How to fill in the paths:
 > (`"command": "bundle"`, `"cwd": "/path/to/togodx-mcp-ruby"`) can work, but the
 > absolute-path form above is the portable one that works everywhere.
 
-> **ChatGPT is not supported.** This server speaks the local stdio transport
-> (launched as a process via `command`/`args`), whereas ChatGPT connectors expect
-> a remote HTTP (SSE / Streamable HTTP) MCP server registered by URL. Use a client
-> that runs local stdio MCP servers, such as Cursor or Claude Desktop.
+> **This setup is for local stdio clients only.** It launches the server as a
+> process via `command`/`args`, which ChatGPT connectors do not support — they
+> expect a remote HTTP MCP server registered by URL. For ChatGPT, and for any
+> other URL-registered client, use the [public server](#public-server) at
+> `https://togodx.dbcls.jp/human/mcp/` instead.
 
-## Remote (HTTP) Server
+## Self-hosting the Remote (HTTP) Server
 
 The server also runs as a remote MCP over the Streamable HTTP transport, so
 clients that register MCP servers by URL (e.g. Claude Desktop connectors,
-ChatGPT custom connectors) can use it.
+ChatGPT custom connectors) can use it. This is how
+<https://togodx.dbcls.jp/human/mcp/> is deployed; follow this section only if
+you want to run your own instance.
 
 ```bash
 bundle config set --local with http   # include the http group (rack + puma)

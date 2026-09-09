@@ -13,5 +13,5 @@ Gem::Specification.new do |spec|
   spec.bindir = "exe"
   spec.executables = ["togodx-mcp"]
   spec.require_paths = ["lib"]
-  spec.add_dependency "mcp", "~> 0.18"
+  spec.add_dependency "mcp", "~> 1.1"
 end
