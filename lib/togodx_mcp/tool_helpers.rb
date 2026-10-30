@@ -45,8 +45,10 @@ module TogodxMcp
     #   - the { "preset" => [...] } object returned by build_preset
     #   - a single { "condition" => ..., "attributeSet" => ... } entry
     #   - a JSON string of any of the above
+    # Keys are stringified throughout: the MCP SDK hands tool arguments over
+    # with symbol keys, while preset consumers read string keys.
     def normalize_preset(value)
-      data = value.is_a?(String) ? JSON.parse(value) : value
+      data = JSON.parse(value.is_a?(String) ? value : JSON.generate(value))
       data = data["preset"] || data[:preset] if data.is_a?(Hash) && (data["preset"] || data[:preset])
       data = [data] if data.is_a?(Hash) && (data["condition"] || data[:condition])
       unless data.is_a?(Array)
