@@ -11,7 +11,8 @@ module TogodxMcp
   module Tools
     class PreviewAggregate < MCP::Tool
       tool_name "preview_aggregate"
-      description "Preview how many entries match a condition using the /aggregate API."
+      description "Preview how many entries match a condition using the /aggregate API. Pass " \
+                  "id_limit: 0 to get every matching ID (e.g. to feed them as queries into a next step)."
       input_schema(
         properties: {
           dataset: {
@@ -32,11 +33,16 @@ module TogodxMcp
             description: "JSON-stringified array of user IDs, e.g. '[\"ID1\",\"ID2\"]'. " \
                          "Provide filters and/or queries; at least one must be a non-empty array.",
           },
+          id_limit: {
+            type: "integer",
+            description: "Maximum matching IDs to return in sample_ids (default " \
+                         "#{ToolHelpers::DEFAULT_ID_LIMIT}; 0 = all). count is always the total.",
+          },
         },
         required: %w[dataset]
       )
 
-      def self.call(dataset:, filters: nil, queries: nil, server_context: nil)
+      def self.call(dataset:, filters: nil, queries: nil, id_limit: nil, server_context: nil)
         ctx = ToolHelpers.context!(server_context)
         raise ArgumentError, "dataset is required" if dataset.to_s.empty?
 
@@ -47,12 +53,7 @@ module TogodxMcp
         end
 
         ids = ctx[:togodx].aggregate(dataset: dataset, filters: filters_json, queries: queries_json)
-        ToolHelpers.json_response(
-          {
-            "count" => Array(ids).length,
-            "sample_ids" => Array(ids).first(20),
-          }
-        )
+        ToolHelpers.json_response(ToolHelpers.limited_ids(ids, id_limit))
       rescue StandardError => e
         ToolHelpers.error_response(e)
       end
@@ -117,7 +118,9 @@ module TogodxMcp
 
     class GetDataframe < MCP::Tool
       tool_name "get_dataframe"
-      description "Fetch the result table from /dataframe for a built condition."
+      description "Fetch the result table (same as the web UI) for a raw dataset/filters condition. " \
+                  "Matching IDs are resolved via /aggregate first (intersected with queries when " \
+                  "given), so queries may be '[]'."
       input_schema(
         properties: {
           dataset: {
@@ -140,7 +143,7 @@ module TogodxMcp
           queries: {
             type: "string",
             description: "JSON-stringified array of user IDs, " \
-                         "e.g. '[\"ID1\",\"ID2\"]'. Pass '[]' when not mapping IDs.",
+                         "e.g. '[\"ID1\",\"ID2\"]'. Optional: narrows the result to these IDs.",
           },
         },
         required: %w[dataset filters]
@@ -148,14 +151,22 @@ module TogodxMcp
 
       def self.call(dataset:, filters:, annotations: nil, queries: "[]", server_context: nil)
         ctx = ToolHelpers.context!(server_context)
-        rows = ctx[:togodx].dataframe(
-          dataset: dataset,
-          filters: filters,
-          annotations: annotations,
-          queries: queries || "[]"
+        raise ArgumentError, "dataset is required" if dataset.to_s.empty?
+
+        filters = ToolHelpers.list_arg(filters, "filters")
+        queries = ToolHelpers.list_arg(queries, "queries")
+        annotations = annotations.nil? ? nil : ToolHelpers.list_arg(annotations, "annotations")
+        if filters.empty? && queries.empty?
+          raise ArgumentError, "At least one of filters or queries must be a non-empty array"
+        end
+
+        ids, rows = ToolHelpers.fetch_table(
+          ctx[:togodx], dataset: dataset, filters: filters, annotations: annotations, queries: queries
         )
         ToolHelpers.json_response(
           {
+            "dataset" => dataset,
+            "id_count" => ids.length,
             "row_count" => Array(rows).length,
             "rows" => rows,
           }
@@ -185,11 +196,11 @@ module TogodxMcp
       def self.call(preset:, filename: nil, server_context: nil)
         ToolHelpers.context!(server_context)
         preset_data = ToolHelpers.normalize_preset(preset)
+        condition = ToolHelpers.preset_conditions(preset_data).first || {}
 
         path = filename.to_s.empty? ? File.join(Dir.tmpdir, "togodx_preset.json") : filename
         File.write(path, JSON.pretty_generate(preset_data))
 
-        condition = preset_data.first&.fetch("condition", {})
         ToolHelpers.json_response(
           {
             "file_path" => path,
@@ -235,18 +246,12 @@ module TogodxMcp
         # dataset/filters/annotations are validated and any defect is returned to
         # the caller as a clear error instead of being silently accepted.
         builder = PresetBuilder.new(catalog: ctx[:catalog])
-        entries = ToolHelpers.normalize_preset(preset).each_with_index.map do |entry, i|
-          condition = entry.is_a?(Hash) && (entry["condition"] || entry[:condition])
-          condition ||= entry
-          unless condition.is_a?(Hash)
-            raise ArgumentError, "Preset entry #{i} must contain a condition object"
-          end
-
+        entries = ToolHelpers.preset_conditions(preset).map do |condition|
           builder.build(
-            dataset: condition["dataset"] || condition[:dataset],
-            filters: condition["filters"] || condition[:filters],
-            annotations: condition["annotations"] || condition[:annotations],
-            queries: condition["queries"] || condition[:queries]
+            dataset: condition["dataset"],
+            filters: condition["filters"],
+            annotations: condition["annotations"],
+            queries: condition["queries"]
           ).first
         end
 
@@ -276,7 +281,8 @@ module TogodxMcp
       input_schema(
         properties: {
           preset: {
-            description: "Preset from build_preset: its `preset` array, the whole { \"preset\": [...] } object, or a JSON string of either.",
+            description: "Preset from build_preset: its `preset` array, the whole { \"preset\": [...] } " \
+                         "object, a bare condition { dataset, filters, ... }, or a JSON string of any of these.",
             type: "array",
           },
         },
@@ -285,9 +291,7 @@ module TogodxMcp
 
       def self.call(preset:, server_context: nil)
         ctx = ToolHelpers.context!(server_context)
-        preset_data = ToolHelpers.normalize_preset(preset)
-
-        condition = PresetBuilder.new(catalog: ctx[:catalog]).condition_from_preset(preset_data)
+        condition = PresetBuilder.new(catalog: ctx[:catalog]).condition_from_preset(preset)
         dataset = condition["dataset"]
         filters = condition["filters"] || []
         annotations = condition["annotations"]
@@ -300,24 +304,8 @@ module TogodxMcp
           raise ArgumentError, "The preset must have a non-empty filters or queries array"
         end
 
-        togodx = ctx[:togodx]
-        filters_json = JSON.generate(filters)
-
-        # Step 1: aggregate matching IDs (filters intersected with any user-supplied queries).
-        ids = Array(
-          togodx.aggregate(
-            dataset: dataset,
-            filters: filters_json,
-            queries: JSON.generate(input_queries)
-          )
-        )
-
-        # Step 2: feed the matched IDs back as queries to fetch the final dataframe rows.
-        rows = togodx.dataframe(
-          dataset: dataset,
-          filters: filters_json,
-          annotations: annotations ? JSON.generate(annotations) : nil,
-          queries: JSON.generate(ids)
+        ids, rows = ToolHelpers.fetch_table(
+          ctx[:togodx], dataset: dataset, filters: filters, annotations: annotations, queries: input_queries
         )
 
         ToolHelpers.json_response(

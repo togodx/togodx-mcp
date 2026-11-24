@@ -2,6 +2,12 @@
 
 module TogodxMcp
   class NodeResolver
+    # TogoDX/Human is about humans, but ontologies such as Mondo also carry
+    # veterinary terms (e.g. "canine gastrointestinal stromal tumor, ... dog"),
+    # so those labels rank below human ones.
+    NON_HUMAN_PATTERN = /\b(non-human|animal|canine|feline|bovine|equine|porcine|ovine|caprine|avian|murine|
+                           dog|cat|horse|cattle|pig|sheep|goat|chicken|mouse|rat)\b/ix
+
     def initialize(togodx:, catalog:)
       @togodx = togodx
       @catalog = catalog
@@ -31,14 +37,17 @@ module TogodxMcp
         end
       end
 
-      begin
-        breakdown_matches = match_in_breakdown(attribute, term)
-        matches.concat(breakdown_matches)
-      rescue HttpClient::Error => e
-        errors << "breakdown: #{e.message}"
+      # Walking the breakdown tree is slow on large ontologies (Mondo timed
+      # out), so only fall back to it when suggest found nothing.
+      if matches.empty?
+        begin
+          matches.concat(match_in_breakdown(attribute, term))
+        rescue HttpClient::Error => e
+          errors << "breakdown: #{e.message}"
+        end
       end
 
-      deduped = matches.uniq { |row| row["node"] }
+      deduped = rank(matches.uniq { |row| row["node"] }, term)
       {
         "term" => term,
         "matches" => deduped,
@@ -68,6 +77,28 @@ module TogodxMcp
 
         match_in_breakdown(attribute, term, node: row["node"], depth: depth + 1)
       end
+    end
+
+    # Best match first: exact label/ID, then prefix, then whole-word, then
+    # substring; non-human labels after human ones (unless the term asks for
+    # them); shorter labels first.
+    # sort_by is not stable, so the original position breaks ties.
+    def rank(rows, term)
+      normalized = term.downcase.strip
+      word = /\b#{Regexp.escape(normalized)}\b/
+      # A term that itself names an animal (e.g. "canine GIST") wants those labels.
+      penalize_non_human = !normalized.match?(NON_HUMAN_PATTERN)
+      rows.each_with_index.sort_by do |row, i|
+        label = row["label"].to_s.downcase.strip
+        match =
+          if label == normalized || row["node"].to_s.downcase == normalized then 0
+          elsif label.start_with?(normalized) then 1
+          elsif label.match?(word) then 2
+          else 3
+          end
+        non_human = penalize_non_human && label.match?(NON_HUMAN_PATTERN) ? 1 : 0
+        [non_human, match, label.length, i]
+      end.map(&:first)
     end
 
     def match_row(row, source:)
