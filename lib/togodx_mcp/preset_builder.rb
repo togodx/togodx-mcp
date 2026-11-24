@@ -2,6 +2,8 @@
 
 require "json"
 
+require_relative "tool_helpers"
+
 module TogodxMcp
   class PresetBuilder
     def initialize(catalog:)
@@ -31,10 +33,10 @@ module TogodxMcp
     end
 
     def condition_from_preset(preset)
-      entry = Array(preset).first
-      raise ArgumentError, "Preset must contain one entry" unless entry
+      condition = ToolHelpers.preset_conditions(preset).first
+      raise ArgumentError, "Preset must contain one entry" unless condition
 
-      entry.fetch("condition")
+      condition
     end
 
     private

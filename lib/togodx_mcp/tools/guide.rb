@@ -98,6 +98,28 @@ module TogodxMcp
           serialized to a string. This keeps one key-value format for GET and POST.
         - preview_aggregate (and run_preset internally) require a dataset plus at least
           one non-empty array of filters or queries.
+        - preview_aggregate returns at most `id_limit` sample_ids (default 20, 0 = all);
+          count is always the total and ids_truncated says whether IDs were cut.
+        - run_preset accepts the build_preset output or a bare condition object.
+        - get_dataframe resolves matching IDs itself; queries may be '[]'.
+        - resolve_nodes ranks exact/prefix label matches and human terms first; still check that
+          the recommended label really is what the user meant. Abbreviations (e.g. "GIST") may
+          match unrelated synonyms, so resolve the full name instead.
+
+        ## Chaining steps (e.g. "compounds that target proteins related to a disease")
+        A single condition cannot express "disease -> its proteins -> compounds targeting
+        them": TogoDX bridges datasets on its own fixed route (disease -> compound may go
+        via drug indication, not via targets). Chain the steps explicitly instead:
+        1. preview_aggregate the first condition with id_limit: 0 to get every matching ID.
+        2. convert_ids with a TogoID route to the next dataset (e.g. uniprot,chembl_target,chembl_compound).
+        3. build_preset / run_preset on the next dataset with the converted IDs as queries, plus any
+           further filters (filters AND queries). Presets and share links need at least one
+           filter, so keep one narrowing filter in this step.
+        4. Tell the user the result was chained, and say which route was used. The share link
+           carries only the final step (with the converted IDs as queries).
+        Example: GIST proteins (uniprot, disease_diseases_mondo c__0011719) ->
+        route uniprot,chembl_target,chembl_compound -> chembl_compound queries plus
+        compound_drug_development_phase_chembl ["4.0"] for approved drugs.
 
         ## Rules
         - Always ground node IDs in API responses; never invent them.
